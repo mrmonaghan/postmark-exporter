@@ -1,8 +1,77 @@
 # postmark-exporter
 
-This application collects stats from the Postmark API and emits them as Prometheus metrics.
+`postmark-exporter` collects mail delivery and bounce statistics from the Postmark API and emits them as Prometheus metrics.
+
+## Getting Started
+
+### Docker
+
+```bash
+docker run \
+    -e POSTMARK_SERVER_TOKEN=<SERVER_TOKEN> \
+    -p 8080:8080 \
+    postmark-exporter:latest
+```
+
+### Kubernetes
+
+```yaml
+# Your secret implementation may vary. 
+# For example purposes, create this resource using kubectl:
+# $ kubectl create secret generic postmark-exporter-secret --from-literal=POSTMARK_SERVER_TOKEN=<SERVER_TOKEN>
+apiVersion: v1
+kind: Secret
+metadata:
+    name: postmark-exporter-secret
+type: Opaque
+data:
+    POSTMARK_SERVER_TOKEN: "<B64_SERVER_TOKEN>"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: postmark-exporter
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: postmark-exporter
+    template:
+        metadata:
+            labels:
+                app: postmark-exporter
+        spec:
+            containers:
+                - name: postmark-exporter
+                    image: postmark-exporter:latest
+                    ports:
+                        - containerPort: 8080
+                    env:
+                        - name: POSTMARK_SERVER_TOKEN
+                            valueFrom:
+                                secretKeyRef:
+                                    name: postmark-exporter-secret
+                                    key: POSTMARK_SERVER_TOKEN
+                        # Optional: override polling interval
+                        # - name: POSTMARK_POLLING_INTERVAL
+                        #   value: "30s"
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: postmark-exporter
+spec:
+    selector:
+        app: postmark-exporter
+    ports:
+        - protocol: TCP
+            port: 8080
+            targetPort: 8080
+```
 
 ## Metrics
+
+Metrics are scraped at `prometheus-exporter:8080/metrics`. The following metrics are exposed:
 
 | Metric Name                            | Type  | Description                                         |
 |----------------------------------------|-------|-----------------------------------------------------|

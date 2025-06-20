@@ -29,16 +29,16 @@ type OutboundStats struct {
 
 type BounceStats struct {
 	Days []struct {
-		Date         string `json:"Date"`
-		HardBounce   int    `json:"HardBounce,omitempty"`
-		SoftBounce   int    `json:"SoftBounce,omitempty"`
-		Transient    int    `json:"Transient,omitempty"`
-		SMTPAPIError int    `json:"SMTPApiError,omitempty"`
-	} `json:"Days"`
-	HardBounce   int `json:"HardBounce"`
-	SMTPAPIError int `json:"SMTPApiError"`
-	SoftBounce   int `json:"SoftBounce"`
-	Transient    int `json:"Transient"`
+		Date         string
+		HardBounce   int
+		SoftBounce   int
+		Transient    int
+		SMTPAPIError int
+	}
+	HardBounce   int
+	SMTPAPIError int
+	SoftBounce   int
+	Transient    int
 }
 
 type Client struct {
