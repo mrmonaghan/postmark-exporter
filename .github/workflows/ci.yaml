@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-    paths_ignore:
+    paths-ignore:
       - '**/*.md'
 
 env:
@@ -32,7 +32,7 @@ jobs:
         with:
           images: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE }}
           tags: |
-            type=sha,format=short
+            type=sha,format=short,prefix=
           flavor: |
             latest=auto
 
