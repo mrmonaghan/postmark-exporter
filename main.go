@@ -15,6 +15,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+// auto-register all metrics with the default registry
 var (
 	bounced = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "postmark_bounced_total",
@@ -93,7 +94,6 @@ func main() {
 		os.Exit(1)
 	}
 	pm := postmark.New(token)
-	logger.Debug("postmark client initialized")
 
 	// setup polling resources
 	duration, err := time.ParseDuration(getEnv("POSTMARK_POLLING_INTERVAL", "15s"))
@@ -101,21 +101,19 @@ func main() {
 		logger.Error("failed to parse POSTMARK_POLLING_INTERVAL", "error", err)
 		os.Exit(1)
 	}
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
 	errs := make(chan error, 1)
 
 	// Start the postmark poll routine
 	go func() {
-		logger.Debug("starting postmark poll routine", "interval", duration)
+		logger.Info("starting postmark poller routine", "interval", duration)
 		tick := time.NewTicker(duration)
 		defer tick.Stop()
 		for {
 			select {
 			case <-ctx.Done():
-				logger.Info("stopping poll routine")
+				logger.Info("stopping postmark poller routine")
 				return
 			case <-tick.C:
 				s, err := pm.GetOutboundStats()
@@ -180,6 +178,7 @@ func main() {
 	}
 }
 
+// updateMetrics updates the Prometheus metrics with the latest stats from Postmark.
 func updateMetrics(s postmark.OutboundStats, b postmark.BounceStats) {
 	bounced.Set(float64(s.Bounced))
 	sent.Set(float64(s.Sent))
@@ -199,6 +198,7 @@ func updateMetrics(s postmark.OutboundStats, b postmark.BounceStats) {
 	transientBounced.Set(float64(b.Transient))
 }
 
+// os.Getenv doesn't support fallback values, so we implement our own.
 func getEnv(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
 		return value
